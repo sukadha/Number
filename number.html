@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Number Recognition</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-node"></script>
+</head>
+<body>
+    <h2>Number Recognition</h2>
+
+    <canvas id="canvas" width="200" height="200" style="border:1px solid #000000;"></canvas><br><br>
+
+    <button onclick="recognizeNumber()">Recognize Number</button>
+
+    <p id="result"></p>
+
+    <script>
+        async function recognizeNumber() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const model = await tf.loadLayersModel('path_to_your_model/model.json'); // Replace with the actual path to your model
+
+            const img = new Image();
+            img.src = canvas.toDataURL();
+            img.onload = function () {
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+                let inputData = [];
+                for (let i = 0; i < imageData.data.length; i += 4) {
+                    inputData.push(imageData.data[i] / 255.0);
+                }
+
+                const input = tf.tensor(inputData, [1, 200, 200, 1]);
+                const prediction = model.predict(input);
+                const result = Array.from(prediction.dataSync());
+
+                const maxIndex = result.indexOf(Math.max(...result));
+                document.getElementById('result').innerText = `Predicted number: ${maxIndex}`;
+            };
+        }
+    </script>
+</body>
+</html>
